@@ -1,2 +1,2 @@
-# programmable-section
-A programmable view sections as extension to Jenkins sectioned view sections.
+# Programmable View Section
+This plugin extends Jenkins sectioned view sections by adding programmable view section.
