@@ -1,0 +1,12 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <st:documentation>
+        A custom checkbox
+        <st:attribute name="id" />
+        <st:attribute name="name"/>
+        <st:attribute name="field"/>
+    </st:documentation>
+    <div>        
+        <input type="checkbox" id="${attrs.id}" name="${attrs.name?:'_.'+attrs.field}" checked="${instance[attrs.field]==true? 'checked':null}" />
+    </div>
+</j:jelly>

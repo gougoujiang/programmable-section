@@ -1,0 +1,65 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <st:documentation>
+        Multi-select control that supports the data binding and AJAX updates.
+        Your descriptor should have the 'doFillXyzItems' method, which returns a DtiListBoxModel
+        representation of the items in your drop-down list box, and your instance field should
+        hold the current value.
+
+        <st:attribute name="clazz">
+            Additional CSS classes that the control gets.
+        </st:attribute>
+        <st:attribute name="prompt">
+            Prompt message.
+        </st:attribute>
+        <st:attribute name="field">
+            Used for databinding.
+        </st:attribute>
+        <st:attribute name="default">
+            The default value of the select box, in case both @value is and 'instance[field]' is null.
+            In the context of multiple select, the 'value' should be a list.
+        </st:attribute>
+        <st:attribute name="multiple">
+            If it is set multiple='multiple', it shows as multi-select box. Otherwise, as single-select.
+        </st:attribute>
+    </st:documentation>
+    
+    <link rel="stylesheet" href="${rootURL}/plugin/programmable-section/js/chosen/chosen_css.css" type="text/css" />
+    <script src="${rootURL}/plugin/programmable-section/js/chosen/chosen_proto.js" type="text/javascript"/>
+    <script src="${rootURL}/plugin/programmable-section/js/select.js" type="text/javascript"/>
+    
+    <j:if test="${attrs.multiple != null}">
+        <style>
+            .chosen-container-multi .chosen-drop .result-selected span a{
+            display: list-item;
+            color: #ccc;
+            }
+        </style>
+    </j:if>
+    
+    <f:prepareDatabinding/>
+
+    ${descriptor.calcFillSettings(field,attrs)} <!-- this figures out the 'fillUrl' and 'fillDependsOn' attribute -->
+    <j:set var="value" value="${attrs.value ?: instance[attrs.field] ?: attrs.default}" />
+    
+    <table>
+        <m:select xmlns:m="jelly:hudson.util.jelly.MorphTagLibrary"
+              class="setting-input ${attrs.checkUrl!=null?'validated':''} ${attrs.multiple != null ? 'dti-multi-select' : 'dti-single-select'} ${attrs.clazz}"
+              name="${attrs.name ?: '_.'+attrs.field}"
+              data-placeholder="${attrs.prompt}" style="display:none"
+              ATTRIBUTES="${attrs}" EXCEPT="field clazz">
+            <j:if test="${value!=null}">
+                <j:choose>
+                    <j:when test="${attrs.multiple != null}">
+                        <j:forEach var="i" items="${value}">
+                            <option value="${i}" selected="selected">${i}</option>
+                        </j:forEach>
+                    </j:when>
+                    <j:otherwise>
+                        <option value="${value}">${value}</option>
+                    </j:otherwise>
+                </j:choose>
+            </j:if>
+        </m:select>
+    </table>
+</j:jelly>

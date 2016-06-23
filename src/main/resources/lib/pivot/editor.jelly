@@ -1,0 +1,74 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <st:documentation>
+        A custom editor
+        <st:attribute name="name"/>
+        <st:attribute name="mode" >
+            sh mode &amp; bat mode
+        </st:attribute>
+        <st:attribute name="value" />
+        <st:attribute name="default" />
+        <st:attribute name="readonly" />
+    </st:documentation>
+    <style>
+        div.editorDiv { 
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <div class="editorDiv">
+        <j:if test="${empty instance}" >
+            <j:set var="instance" value="${it}" />
+        </j:if>
+        <j:set var="value" value="${attrs.value ?: instance[attrs.field] ?: attrs.default}" />
+        <div id="${attrs.id}" style="width: 100%; height: 100%">                
+        </div>
+        <div style="display: none">
+            <textarea name="${attrs.name?:'_.' + attrs.field}">${value}</textarea>        
+        </div>
+    </div>
+    <script type="text/javascript">
+        Behaviour.specify("Div.editorDiv", 'editorDiv', 1000, function(e) {
+            var e = $(e);
+            var editorDiv = e.children[0];        
+            var idnumber = "editor_0";
+            var n = 0;
+            while(document.getElementById(idnumber)!=null || document.getElementById(idnumber) != undefined) {
+                n++;
+                idnumber = "editor_" + n;
+            }
+            editorDiv.id = idnumber;
+            var editor = ace.edit(idnumber);
+        
+            <j:if test="${attrs.readonly}">
+                editor.setOptions({
+                    readOnly: true
+                    });
+            </j:if>    
+        
+            editor.setTheme("ace/theme/chrome");
+            <j:if test="${attrs.mode eq 'sh'}">
+                editor.getSession().setMode("ace/mode/sh");
+            </j:if>
+            <j:if test="${attrs.mode eq 'bat'}">
+                editor.getSession().setMode("ace/mode/batchfile");
+            </j:if>
+            <j:if test="${attrs.mode eq 'groovy'}">
+                editor.getSession().setMode("ace/mode/groovy");
+            </j:if>
+            <j:if test="${attrs.mode eq 'xml'}">
+                editor.getSession().setMode("ace/mode/xml");
+            </j:if>
+            var editorNode = document.getElementById(idnumber);
+            editor.on("change", function() {
+                <!--var editorNode = document.getElementById("${attrs.id}");-->
+                var textarea = editorNode.nextSibling.children[0];
+                textarea.value = editor.getValue();
+            });
+            var editorNode = document.getElementById(idnumber);
+            var textarea = editorNode.nextSibling.children[0];
+            editor.setValue(textarea.value);
+        });
+    </script>
+
+</j:jelly>

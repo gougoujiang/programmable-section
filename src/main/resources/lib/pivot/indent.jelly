@@ -1,0 +1,13 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" >
+    <st:documentation>
+        <st:attribute name="pad" />
+    </st:documentation>
+    <j:if test="${attrs.pad != null}">
+        <j:set var="index" value="0"/>
+        <j:while test="${index &lt; attrs.pad}">
+            <j:set var="index" value="${index + 1}"/>
+            <st:nbsp/>
+        </j:while> 
+    </j:if>
+</j:jelly>

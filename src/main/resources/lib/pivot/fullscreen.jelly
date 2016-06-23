@@ -1,0 +1,110 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">    
+      <st:documentation>
+        A custom editor
+        <st:attribute name="title"/>
+      </st:documentation>
+    <style>
+        div.fullscreen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1000;
+            top: 0px;
+            left: 0px;
+        }
+        div.normalcenter {
+            width: 100%;
+        }
+        div.fullscreen-center { 
+            z-index: 1200; 
+            background: #f0f0f0; 
+            top: 10px; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            width: 80%; 
+            text-align: center;
+        }
+        th.title0 {
+            background-color: #f0f0f0;
+            text-align:left;
+            padding: 0 0 0 5px;
+        }
+        th.title1 {
+            background-color: #f0f0f0;
+            text-align:right;
+        }
+    </style>    
+    <script>
+        Behaviour.specify("Div.fullscreendiv", 'fullscreendiv', 0, function(e) {
+            e = $(e);
+            var max = e.getElementsBySelector("a.maxlink")[0];
+            var close = e.getElementsBySelector("a.closelink")[0];
+            var container = e.getElementsBySelector("div.fullscreencontainer")[0];
+            max.on("click", function() {
+                max.style.display = "none";
+                e.className = e.className + " fullscreen";
+                container.className = container.className + " fullscreen-center";
+                var newHeight = window.innerHeight * 0.3;
+                var margin = newHeight + "px auto " + newHeight +"px auto";
+                container.style.margin = margin;
+                close.style.display = "block"
+            });
+            close.on("click", function() {
+                max.style.display = "block";
+                e.className = "fullscreendiv";
+                container.className = "fullscreencontainer";
+                container.style.margin = "";
+                close.style.display = "none"
+
+                var scrollingBody = document.body;
+                if (YAHOO.env.ua.gecko) {
+                    scrollingBody = document.documentElement;
+                }
+                (new YAHOO.util.Scroll(
+                    scrollingBody,
+                    {
+                        scroll:
+                        {
+                            to: [0, e.positionedOffset().top - 100]
+                        }
+                     },
+                     0.5,
+                     YAHOO.util.Easing.easeOut
+                 )).animate();
+            });
+            var containerDiv = e.getElementsBySelector("DIV.normalcenter")[0];
+            var newHeight = window.innerHeight * 0.4;
+            containerDiv.setAttribute("style", "height: "+ newHeight + "px");
+        });
+        
+    </script>
+    <div class="fullscreendiv">
+        <div class="fullscreencontainer">
+            <table style="width: 100%; border: 1px solid gray; border-spacing: 2px; border-collapse: collapse; text-align: left;">
+                <tr >
+                    <th class="title0">
+                        ${attrs.title}
+                    </th>
+                    <th  class="title1">
+                        <a class="maxlink" href="#">
+                            <img src="${rootURL}/plugin/programmable-section/images/24x24/maximize.png" alt="Maximize"></img>
+                        </a>
+                        <a class="closelink" href="#" style="display: none;">
+                            <img src="${rootURL}/plugin/programmable-section/images/24x24/cancel.png" alt="Close"></img>
+                        </a>
+                    </th>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="normalcenter">
+                            <d:invokeBody />
+                        </div>                
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</j:jelly>

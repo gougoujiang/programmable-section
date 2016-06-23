@@ -1,0 +1,62 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form"
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" >
+    <st:documentation>
+        <st:attribute name="field" />
+        <st:attribute name="name" />       
+    </st:documentation>
+    <script>
+    function updateTextbox(textBox,url,config) {
+            config = config || {};
+            config = object(config);
+            var originalOnSuccess = config.onSuccess;
+            config.onSuccess = function(rsp) {
+                var c = $(textBox);                
+                c.value=rsp.responseText;
+            } 
+                  
+            config.onFailure = function(rsp) {
+            }
+
+            new Ajax.Request(url, config);
+        }
+    Behaviour.specify("input.customTextbox", "customTextbox", 0, function(e) {
+        refillOnChange(e, function(params) {
+            var value = e.value;      
+            updateTextbox(e, e.getAttribute("fillUrl"), {
+                parameters: params,
+                onSuccess: function() {
+                    if (value == "") {
+                        var v = e.getAttribute("value");
+                        if (v) {
+                            e.value = v;
+                            if (e.value == v) {
+                                e.removeAttribute("value");
+                           }
+                        }
+                    }
+                    
+                    fireEvent(e, "filled");
+                    if (e.value != value) {
+                        consoel.log("change");
+                        fireEvent(e, "change");
+                    }
+                }
+            });
+        });
+    });
+    </script>
+    <f:prepareDatabinding />
+     ${descriptor.calcAutoCompleteSettings(autoCompleteField?:field,attrs)} 
+    <!-- this figures out the 'autoCompleteUrl' attribute -->
+
+    <j:if test="${not empty field}"> 
+        ${descriptor.calcFillSettings(field,attrs)} 
+    </j:if>
+    
+    <m:input xmlns:m="jelly:hudson.util.jelly.MorphTagLibrary"
+         class="customTextbox setting-input ${attrs.checkUrl!=null?'validated':''} ${attrs.autoCompleteUrl!=null?'auto-complete':null} ${attrs.clazz}"
+         name="${attrs.name ?: '_.'+attrs.field}"
+         value="${attrs.value ?: instance[attrs.field] ?: attrs.default}"
+         type="text"
+         ATTRIBUTES="${attrs}" EXCEPT="field clazz" />    
+</j:jelly>

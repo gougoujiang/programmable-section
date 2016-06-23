@@ -1,0 +1,15 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"        
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <st:documentation>
+        <st:attribute name="id" />
+        <st:attribute name="name" />
+        <st:attribute name="field" />
+    </st:documentation>
+    <div>
+        <select id="${attrs.id}" name="${attrs.name}">
+            <j:forEach var="item" items="${instance[attrs.field]}">
+                <option value="${item}">${item}</option>
+            </j:forEach>
+        </select>   
+    </div>
+</j:jelly>

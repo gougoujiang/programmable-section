@@ -1,0 +1,40 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" >
+    <st:documentation>
+        Support filtering items
+        <st:attribute name="selector" />
+        <st:attribute name="align" />
+        <st:attribute name="title" />
+    </st:documentation>
+    <link rel="stylesheet" href="${rootURL}/plugin/programmable-section/css/filter.css" type="text/css" />
+    <script language="javascript">
+        Behaviour.specify(".filter-box", '0', 0, function(e) {
+            function applyFilter() {
+                var filter = e.value.toLowerCase();
+                var visible;
+                var filterValues;
+                if(filter != ""){
+                    var filterValues = filter.split(" ");
+                }
+                var items = document.getElementsBySelector(e.up().getAttribute('selector'));
+                for (var i=0; i &lt; items.length; i++) {
+                    visible = true;
+                    if(filterValues != undefined){
+                        for(var j=0; j &lt; filterValues.length; j++){
+                            if(items[i].innerText.toLowerCase().indexOf(filterValues[j]) &lt; 0){
+                                visible = false;
+                                break;
+                            }
+                        }
+                    }
+                    items[i].style.display = (visible ? "" : "none");
+                }
+            }
+
+            e.onkeyup = applyFilter;
+      });
+    </script>
+    <div class="filter-container" style="text-align:${attrs.align}" selector="${attrs.selector}">
+            ${attrs.title}<input type="text" class="filter-box"/>
+    </div> 
+</j:jelly>

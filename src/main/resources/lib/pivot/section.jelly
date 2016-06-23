@@ -1,0 +1,154 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <st:documentation>
+        Section header in the form table.
+        A custom section control, support collapse/expand its content feature.
+        <st:attribute name="title" use="required">
+            The section header text.
+            If null is given, the entire &lt;f:section> tag becomes no-op.
+        </st:attribute>
+        <st:attribute name="name">
+            Optional attribute to create a JSON object from this section.
+        </st:attribute>
+        <st:attribute name="ref">
+            id of the thing that serves as the group head, if that's available separately
+        </st:attribute>
+        <st:attribute name="collapseAll">
+            If true, collapse all for the first load of the control.
+            If false, expand all for the first load of the control.
+        </st:attribute>
+    </st:documentation>
+    <style>
+        .icon {
+        /* don't change width and height in order to change the size of the icon,
+        you can control the size with font-size for different class(es) - below */
+        line-height: 100%;
+        width: 1em;
+        height: 1em;
+        position: relative;
+        display: block;
+        float: left;            
+        cursor: pointer;
+        }
+        /* Plus */
+        .icon-plus,
+        .icon-plus:after {
+        position: absolute;
+        width: .375em;
+        height: .375em;
+        border-style: solid;
+        border-color: rgb(102, 102, 102); /* #666 */
+        }
+        .icon-plus {
+        top: 0;
+        left: 0;
+        border-width: 0 .25em .25em 0;
+        }
+        .icon-plus:after {
+        content: "";
+        top: .375em;
+        left: .375em;
+        border-width: .25em 0 0 .25em;
+        }
+        /* Minus */
+        .icon-minus {
+        position: absolute;
+        top: .375em;
+        left: 0;
+        width: 1em;
+        height: .25em;
+        background-color: rgb(102, 102, 102); /* #666 */
+        }        
+    </style>
+    <st:adjunct includes="lib.form.section_" />
+    <script >
+        Behaviour.specify("a.section-a", 'customSectionClick', 0, function(e) {
+            e.on("click", function() {    
+                var className = e.children[0].children[0].className;
+                var tr = e.parentElement.parentElement.parentElement;
+                
+                var nTr = tr.nextElementSibling;
+                
+                if (className === "icon-minus") {
+                    e.children[0].children[0].className="icon-plus";
+                    var t = nTr.getElementsBySelector("table.custom-section")[0];
+                    t.setAttribute("style", "display: none;");
+                } 
+                else {
+                    e.children[0].children[0].className="icon-minus";
+                    var t = nTr.getElementsBySelector("table.custom-section")[0];
+                    t.setAttribute("style", "");
+                }      
+            });
+        });
+    </script>
+    <j:choose>
+        <j:when test="${attrs.ref==null and attrs.name==null}">
+            <!-- noop -->
+            <j:if test="${attrs.title!=null}">
+                <f:block>
+                    <div class="section-header">
+                        <a href="#" class="section-a">
+                            <span class="icon">                                
+                                <j:if test="${attrs.collapseAll eq true}">
+                                    <span class="icon-plus"></span>
+                                </j:if>
+                                <j:if test="${attrs.collapseAll ne true}">
+                                    <span class="icon-minus"></span>
+                                </j:if>
+                            </span>
+                        </a>
+                        <st:nbsp/>
+                        ${title}
+                    </div>
+                </f:block>
+            </j:if>
+            <f:block>
+                <j:if test="${attrs.collapseAll eq true}">
+                    <table class="custom-section" width="100%" style="display: none;">
+                        <d:invokeBody />
+                    </table>
+                </j:if>
+                <j:if test="${attrs.collapseAll ne true}">
+                    <table class="custom-section" width="100%">
+                        <d:invokeBody />
+                    </table>
+                </j:if>                
+            </f:block>
+        </j:when>
+        <j:otherwise>
+            <tr ref="${attrs.ref}" class="row-set-start" style="display:none" name="${attrs.name}" />
+            <j:if test="${attrs.title!=null}">
+                <f:block>
+                    <div class="section-header">
+                        <a href="#" class="section-a">
+                            <span class="icon">
+                                <j:if test="${attrs.collapseAll eq true}">
+                                    <span class="icon-plus"></span>
+                                </j:if>
+                                <j:if test="${attrs.collapseAll ne true}">
+                                    <span class="icon-minus"></span>
+                                </j:if>
+                            </span>
+                        </a>  
+                        <st:nbsp/>
+                        ${title}
+                    </div>
+                </f:block>
+            </j:if>
+            <f:block>
+                <j:if test="${attrs.collapseAll eq true}">
+                    <table class="custom-section" width="100%" style="display: none;">
+                        <d:invokeBody />
+                    </table>
+                </j:if>
+                <j:if test="${attrs.collapseAll ne true}">
+                    <table class="custom-section" width="100%">
+                        <d:invokeBody />
+                    </table>
+                </j:if>                
+            </f:block>
+            <tr class="row-set-end" />
+        </j:otherwise>
+    </j:choose>
+</j:jelly>

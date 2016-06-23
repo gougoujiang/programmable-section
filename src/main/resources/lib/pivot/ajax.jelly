@@ -1,0 +1,140 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form" xmlns:p="/lib/hudson/project">
+      <st:documentation>
+        <st:attribute name="id">
+            Used for finding table to replace.
+        </st:attribute>
+        <st:attribute name="field">
+            Used for databinding.
+        </st:attribute>
+        <st:attribute name="width">
+            Used for control the table width.
+        </st:attribute>
+    </st:documentation>
+    <j:choose>
+    <j:when test="${rootURL!=null}">
+      <!-- no envelope needed, since this is called during full HTML rendering. -->
+      <d:invokeBody/>
+    </j:when>
+    <j:otherwise>
+      <!-- called to generate partial HTML. set up HTML headers and etc -->
+      <!-- copied from layout.jelly -->
+      <st:contentType value="text/html;charset=UTF-8" />
+      <j:new var="h" className="hudson.Functions" /><!-- instead of JSP functions -->
+      ${h.initPageVariables(context)}
+      <j:set var="ajax" value="true"/>
+      <d:invokeBody/>
+    </j:otherwise>
+  </j:choose>
+  <j:set var="tabId" value="${attrs.id}" />
+  <script language="javascript">
+    function refreshPart2(tabId,url,value){
+        if(url != null){
+            new Ajax.Request(url, {
+                method: 'post',
+                parameters: value,
+                onSuccess: function(rsp) {
+                    var hist = document.getElementById(tabId);
+                    if (hist==null) console.log("There's no element that has ID of "+id)
+                    var p = hist.up();
+
+                    var table = document.createElement('table');
+                    table.id = tabId;
+                    table.width = hist.width;
+                    table.innerHTML = rsp.responseText;
+
+                    p.replaceChild(table, hist);
+            
+                    console.log("execute the control's behaviour.specify method");            
+                    var scripts = table.getElementsByTagName("script");
+                    for(var i = 0;i!=scripts.length;i++) {
+                        var script1 = scripts[i];
+                        var data = script1.innerHTML;
+                        eval(data);
+                    }
+                    
+                    Behaviour.applySubtree(table);
+                    layoutUpdateCallback.call();
+                },
+                onFailure: function() {
+                    var hist = document.getElementById(tabId);
+                    if (hist==null) console.log("There's no element that has ID of "+id)
+                    var p = hist.up();
+
+                    var table = document.createElement('table');
+                    table.id = tabId;
+                    table.width = hist.width;
+                    table.innerHTML = null;
+
+                    p.replaceChild(table, hist);
+
+                    Behaviour.applySubtree(table);
+                    layoutUpdateCallback.call();
+                }
+            });  
+        }
+    }
+    
+    function updateArea(divPart,url,config) {
+        config = config || {};
+        config = object(config);
+        var id = '${tabId}';
+        var params = config.parameters;
+        var originalOnSuccess = config.onSuccess;
+        config.onSuccess = function(rsp) {
+            var opts = eval('('+rsp.responseText+')');
+            if(opts != null){
+                var name = opts.name;
+                var page = opts.url;
+                var map = opts.attrs;
+                for(var paramName in map){
+                    params[paramName] = map[paramName];
+                }
+                refreshPart2(id, page, params);
+            }
+        },
+        config.onFailure = function(rsp) {
+            var page = null;
+            refreshPart2(id, page, params);
+        }
+
+        new Ajax.Request(url, config);
+}
+      
+    Behaviour.specify("DIV.ajax", 'div', 0, function(e) {
+        // controls that this div depends on
+        refillOnChange(e,function(params) {
+            var value = e.value;
+            updateArea(e,e.getAttribute("fillUrl"),{
+                parameters: params,
+                onSuccess: function() {
+                    if (value=="") {
+                        // reflect the initial value. if the control depends on several other SELECT.select,
+                        // it may take several updates before we get the right items, which is why all these precautions.
+                        var v = e.getAttribute("value");
+                        if (v) {
+                            e.value = v;
+                            if (e.value==v) e.removeAttribute("value"); // we were able to apply our initial value
+                        }
+                    }
+
+                    fireEvent(e,"filled"); // let other interested parties know that the items have changed
+
+                    // if the update changed the current selection, others listening to this control needs to be notified.
+                    if (e.value!=value) fireEvent(e,"change");
+                }
+            });
+        });
+    });
+    </script>
+  
+  ${descriptor.calcFillSettings(field,attrs)}
+<!--    <div fillDependsOn="${attrs.fillDependsOn}" fillUrl="${attrs.fillUrl}" class="ajax">
+    </div>-->
+    <m:div xmlns:m="jelly:hudson.util.jelly.MorphTagLibrary"
+         class="ajax"
+         ATTRIBUTES="${attrs}" EXCEPT="id field clazz">
+   </m:div>
+   <table id="${attrs.id}" width="${attrs.width}"/>
+    
+</j:jelly>

@@ -1,0 +1,16 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">    
+      <st:documentation>
+        A custom div container, the children control, text, checkbox and etc are not editable.
+        <st:attribute/>
+      </st:documentation>
+      <style>
+          div.noEditableContainerDiv
+          { 
+                pointer-events: none;
+          }
+      </style>    
+      <div class="noEditableContainerDiv">
+        <d:invokeBody />
+    </div>
+</j:jelly>

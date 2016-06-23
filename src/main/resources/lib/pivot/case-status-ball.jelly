@@ -1,0 +1,102 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" >
+    <st:documentation>
+        <st:attribute name="b">
+            An instance of CaseRun. If null, show an empty icon.
+        </st:attribute>
+        <st:attribute name="iconSize">
+            Size of icon, default to 16x16
+        </st:attribute>
+    </st:documentation>
+    <j:set var="sizeoficon" value="16x16"/>
+    <j:if test="${attrs.iconSize != null}">
+        <j:set var="sizeoficon" value="${attrs.iconSize}"/>
+    </j:if>
+    <j:choose>
+        <j:when test="${b != null}">
+            <j:set var="console" value="true"/>
+            <j:set var="dtierr"  value="false"/>
+            <j:switch on="${b.dtiResult.toString()}">
+                <j:case value="${'SUCCESS'}">
+                    <j:set var="dr" value="${imagesURL}/${sizeoficon}/green.gif"></j:set>
+                    <j:set var="dalt" value="Ok"></j:set>                        
+                </j:case>
+                <j:case value="${'FAILURE'}">
+                    <j:set var="dtierr"  value="true"/>
+                    <j:set var="dr" value="${imagesURL}/${sizeoficon}/error.png"></j:set>
+                    <j:set var="dalt" value="Error Exists"></j:set>
+                </j:case>
+                <j:case value="${'UNSTABLE'}">
+                    <j:set var="dr" value="${imagesURL}/sizeoficon/warning.png"></j:set>
+                    <j:set var="dalt" value="Warn Exists"></j:set>
+                </j:case>
+                <j:default>
+                    <!--<j:set var="r" value="${imagesURL}/${sizeoficon}/empty.png"/>-->
+                    <j:set var="dr" value="${imagesURL}/${sizeoficon}/empty.png"></j:set>
+                    <j:set var="dalt" value="Not started"></j:set>
+                </j:default>
+            </j:switch>
+            <!--Some columns are not shown for skipped cases-->
+            <j:set var="skippedcase" value="false"/>
+            <j:switch on="${b.result.toString()}">
+                <j:case value="${'SUCCESS'}">
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/blue.png"></j:set>
+                    <j:set var="alt" value="OK > Console output"></j:set>                        
+                </j:case>
+                <j:case value="${'FAILURE'}">
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/red.png"></j:set>
+                    <j:set var="alt" value="Fail:${b.subResult} > Console output"></j:set>
+                </j:case>
+                <j:case value="${'ABORTED'}">
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/grey.png"></j:set>
+                    <j:set var="alt" value="Aborted:${b.subResult} > Console output"></j:set>
+                </j:case>
+                <j:case value="${'UNSTABLE'}">
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/yellow.png"></j:set>
+                    <j:set var="alt" value="Timeout:${b.subResult} > Console output"></j:set>
+                </j:case>
+                <j:case value="${'NOT_BUILT'}">
+                    <j:set var="dr" value="${imagesURL}/${sizeoficon}/empty.png"></j:set>
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/grey.png"></j:set>
+                    <j:set var="alt" value="Skipped"></j:set>
+                    <j:set var="console" value="true"/>
+                    <j:set var="skippedcase" value="true"/>
+                </j:case>
+                <j:default>
+                    <j:set var="r" value="${imagesURL}/${sizeoficon}/grey_anime.gif"></j:set>
+                    <j:set var="alt" value="Running > Console output"></j:set>
+                </j:default>
+            </j:switch>
+            <!--If case is DtiError, case result will be NA-->
+            <j:if test="${dtierr}">
+                <j:set var="alt" value="N/A"></j:set>
+            </j:if>
+            <j:choose>
+                <j:when test="${console}">
+                    <j:choose>
+                        <j:when test="${!b.subRun}">                                    
+                            <a href="${rootURL}/${b.url}console">
+                                <img alt="${alt}" src="${r}" tooltip="${alt}"></img>                                               
+                            </a>
+                        </j:when>
+                        <j:otherwise>
+                            <a href="${rootURL}/${b.url}console">
+                                <img alt="${alt}" src="${r}" tooltip="${alt}"></img>
+                            </a>
+                        </j:otherwise>
+                    </j:choose>
+                </j:when>
+                <j:otherwise>                                    
+                    <a>
+                        <img alt="${alt}" src="${r}" tooltip="${alt}"></img>
+                    </a>
+                </j:otherwise>
+            </j:choose>   
+        </j:when>
+        <j:otherwise>
+            <a>
+                <img src="${imagesURL}/${sizeoficon}/empty.png"></img>
+            </a>
+        </j:otherwise>
+    </j:choose> 
+</j:jelly>

@@ -1,0 +1,34 @@
+.pivottable {
+	border-collapse:collapse;
+	margin-bottom:15px;
+	width:90%;
+}
+
+.pivottable td,
+.pivottable th {
+	padding:5px;
+	border:1px solid gray;
+	text-align:center;
+}
+
+.pivottable thead th {
+	background:#f0f0f0;
+}
+	
+.pivottable thead th[colspan],
+.pivottable thead th[rowspan] {
+	background:#f0f0f0;
+}
+
+.pivottable tbody th{
+	text-align:center;
+	background:#f0f0f0;
+}
+
+.pivottable tbody td {
+	text-align:center;
+}
+	
+.pivottable tbody tr.odd td { 
+	background:#bcd9e1;
+}

@@ -1,0 +1,176 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <st:documentation>
+        A custom multiple checkbox;
+        <st:attribute name="name"/>
+        <st:attribute name="items"/>
+        <st:attribute name="defaultItems"/>
+        <stattribute name="showBorder" >
+            The attribute determine whether show the border or not. the default value is false;
+        </stattribute>
+    </st:documentation>
+    <style>
+        div.multicheckboxdiv {
+        
+        }
+    </style>
+    <script>
+        function updateCheckbox(checkBox,url,config) {
+            config = config || {};
+            config = object(config);
+            var originalOnSuccess = config.onSuccess;
+            config.onSuccess = function(rsp) {
+                var opts = eval('('+rsp.responseText+')').values;
+                var c = $(checkBox);
+        
+                var checkboxpart = c.getElementsBySelector("DIV.checkboxpart")[0];
+                var selectpart = c.getElementsBySelector("SELECT.selectpart")[0];
+                checkboxpart.innerHTML = "";
+                selectpart.innerHTML = "";
+        
+                var ps = c.getElementsBySelector("P.template");
+                var selected1 = {};
+                for (var i = 0;i!=ps.length;i++) {
+                    selected1[ps[i].innerHTML] = 1;
+                }
+
+                for (var i = 0;i!=opts.length;i++) {
+                    var input = document.createElement("input");
+                    input.setAttribute("type", "checkbox");  
+                    input.setAttribute("seq", opts[i].value);
+		  			input.setAttribute("class", "checkboxpartitem");
+                    if (opts[i].checked===true) {
+                        input.setAttribute("checked", "checked");
+                    }
+                    
+                    if (selected1[opts[i].value] === 1) {
+                        input.setAttribute("checked", "checked");
+                    }
+        
+                    var label = document.createElement("label");
+                    label.setAttribute("class" ,"attach-previous");
+                    label.innerHTML = opts[i].name;                    
+        
+                    var br = document.createElement("br");
+                    
+                    checkboxpart.appendChild(input);
+                    checkboxpart.appendChild(label);
+                    checkboxpart.appendChild(br);
+        
+                    var option = document.createElement("option");
+                    option.setAttribute("value", opts[i].value);
+                    option.innerHTML = opts[i].name;
+                    if (selected1[opts[i].value] === 1) {
+                        option.setAttribute("selected", "selected");
+                    }
+                    selectpart.appendChild(option);
+                    
+                    input.on("click", function(e) {
+                        var src = e.target?e.target:e.srcElement;
+        
+                        var parent = src.parentElement;
+                        var inputs = parent.getElementsBySelector("input.checkboxpartitem");
+                        
+                        var next = parent.nextElementSibling.children[0];        
+                        next.innerHTML = "";
+                        
+                        for (var i = 0; i!=inputs.length;i++) {
+                            if (inputs[i].checked === true) {
+                                var option1 = document.createElement("option");
+                                option1.setAttribute("value", inputs[i].getAttribute("seq"));
+                                option1.setAttribute("selected", "selected");
+                                next.appendChild(option1);
+                            }
+                        }                       
+                    });
+                }
+            },
+            config.onFailure = function(rsp) {
+            }
+
+            new Ajax.Request(url, config);
+        }
+
+        Behaviour.specify("Div.multicheckboxdiv", 'multicheckbox', 0, function(e) {
+            console.log("Multicheckbox executes behaviour specify.");
+        <!--// controls that this SELECT box depends on-->
+            refillOnChange(e,function(params) {
+                var value = e.value;
+                updateCheckbox(e,e.getAttribute("fillUrl"),{
+                    parameters: params,
+                    onSuccess: function() {
+                        if (value=="") {
+                        // reflect the initial value. if the control depends on several other SELECT.select,
+                        // it may take several updates before we get the right items, which is why all these precautions.
+                            var v = e.getAttribute("value");
+                            if (v) {
+                                e.value = v;
+                                if (e.value==v) e.removeAttribute("value"); 
+                                // we were able to apply our initial value
+                            }
+                        }
+                            
+                        fireEvent(e,"filled");
+                        // let other interested parties know that the items have changed
+
+                        // if the update changed the current selection, others listening to this control needs to be notified.
+                        if (e.value!=value) fireEvent(e,"change");
+                    }
+                });
+            });            
+        });
+        Behaviour.specify("INPUT.checkboxpartitem", 'checkboxpartitem', 0, function(e) {
+            e.on("click", function() {                       
+                        var src = e;
+                        var parent = src.parentElement;
+                        var inputs = parent.getElementsBySelector("input.checkboxpartitem");
+                        
+                        var next = parent.nextElementSibling.children[0];        
+                        next.innerHTML = "";
+                        
+                        for (var i = 0; i!=inputs.length;i++) {
+                            if (inputs[i].checked === true) {
+                                var option1 = document.createElement("option");
+                                option1.setAttribute("value", inputs[i].getAttribute("seq"));
+                                option1.setAttribute("selected", "selected");
+                                next.appendChild(option1);
+                            }
+                        }     
+            });
+        });
+    </script>
+    <j:if test="${not empty field}"> 
+        ${descriptor.calcFillSettings(field,attrs)} 
+    </j:if>
+    <j:set var="divstyle" value="padding: 0px; max-height: 10em; margin: 0px 0px 0px 0px; overflow:auto;"/>
+    <j:if test="${showBorder eq true}">
+        <j:set var="divstyle" value="${divstyle + 'border-style: solid; border-width: 1px;'}" />
+    </j:if>
+    <tr class="multicheckbox-block-start ${attrs.inline?'':'row-set-start'}">
+        <td colspan="3">
+            <div class="multicheckboxdiv" fillDependsOn="${attrs.fillDependsOn}"  fillUrl="${attrs.fillUrl}" style="${divstyle}">
+            <div class="checkboxpart">            
+                <j:forEach var="i" items="${attrs.defaultItems}">
+                    <input type="checkbox"  class="checkboxpartitem" seq="${i}"/>
+                    <label class="attach-previous">${i}</label>
+                    <br/>         
+                </j:forEach>
+            </div>
+            <div style="display: none;">
+                <select class="selectpart" name="${attrs.name?:'_.' + attrs.field}" multiple="multiple">
+                    <j:forEach var="i" items="${attrs.items}">
+                        <option value="${i}">${i}</option>
+                    </j:forEach>
+                </select>
+            </div>
+            <div style="display: none;">
+                <j:forEach var="i" items="${attrs.items}">
+                    <p class="template">${i}</p>                
+                </j:forEach>
+            </div>
+        </div>
+    </td>
+</tr>
+      <tr class="${attrs.inline?'':'row-set-end'} rowvg-end multicheckbox-block-end" />
+    
+</j:jelly>

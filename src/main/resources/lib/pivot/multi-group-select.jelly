@@ -1,0 +1,155 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <st:documentation>
+        A custom multiple checkbox;
+        <st:attribute name="name"/>
+        <st:attribute name="items"/>
+        <stattribute name="title" >
+        </stattribute>
+    </st:documentation>
+    <style>
+       fieldset.groupmultiselect {
+            margin: 10px 0 10px 0;
+        }
+    </style>
+    <script>
+        function updateGroup(group1, url, config) {
+            config = config || {};
+            config = object(config);
+            var originalOnSuccess = config.onSuccess;
+            config.onSuccess = function(rsp) {
+                var items = eval('('+rsp.responseText+')').values;
+                var group = $(group1);
+                var grouppart = group.getElementsBySelector("div.grouppart")[0];
+                grouppart.innerHTML = "";
+                for(var index = 0;index !=items.length; index++) {
+                    var item = items[index];
+                    var groupName = item.group;
+                    var displayName = item.name;
+                    var value = item.value;
+                    
+                    // get or add fieldset;                   
+                    var fieldset = grouppart.getElementsBySelector("fieldset[name=" + groupName + "]")[0];
+                    if (fieldset === undefined || fieldset === null) {
+                        fieldset = document.createElement("fieldset");
+                        fieldset.setAttribute("name", groupName);
+                        fieldset.setAttribute("class", "groupmultiselect");
+                        var legend = document.createElement("legend");
+                        legend.innerHTML = groupName;
+                        fieldset.appendChild(legend);
+                        grouppart.appendChild(fieldset);
+                    }
+                    
+                    var input = document.createElement("input");
+                    input.setAttribute("type", "checkbox");                      
+                    input.setAttribute("name", value);
+		  fieldset.appendChild(input);
+        
+                    var label = document.createElement("label");
+                    label.setAttribute("class" ,"attach-previous");
+                    label.innerHTML = displayName;                    
+                    fieldset.appendChild(label);
+        
+                    var br = document.createElement("br");
+                    fieldset.appendChild(br);
+        
+                    var templates = group.getElementsBySelector("div > p.groupMultiSelectTemplate[group=" + groupName + "][value=" + value +"]");
+
+                    if (templates.length > 0) {
+                        input.setAttribute("checked", "checked");
+                    }
+                }
+                var data ={};                
+                var blocks = group1.getElementsBySelector("div > fieldset.groupmultiselect");
+        
+                for (var i = 0;i!=blocks.length; i++) {                    
+                    var inner = {};
+                    var inputs = blocks[i].getElementsBySelector("input");
+                    for (var j =0;j!=inputs.length;j++) {
+                        inner[inputs[j].name]=inputs[j].checked;
+                    }
+                    data[blocks[i].name] = inner;
+                }                
+                group1.parentElement.nextElementSibling.value = JSON.stringify(data);
+                group1.value = JSON.stringify(data);
+        
+                if (originalOnSuccess!=undefined) {
+                    originalOnSuccess(rsp);
+                }                
+                
+            },
+            config.onFailure = function(rsp) {
+            }
+
+            new Ajax.Request(url, config);
+        }
+
+        Behaviour.specify("Div.groupmultiselectdiv", 'groupmultiselect', 0, function(e) {         
+        <!--// controls that this SELECT box depends on-->      
+            e.on("change", function() {
+                var data ={};
+                var d = e.parentElement.nextElementSibling;
+                var blocks = e.getElementsBySelector("div > fieldset.groupmultiselect");        
+                for (var i = 0;i!=blocks.length; i++) {                   
+                   var inner = {};
+                    var inputs = blocks[i].getElementsBySelector("input");
+                    for (var j =0;j!=inputs.length;j++) {
+                        inner[inputs[j].name]=inputs[j].checked;
+                    }
+                    data[blocks[i].name] = inner;
+                }
+                d.value = JSON.stringify(data);
+                fireEvent(d, "change");
+            });
+            refillOnChange(e,function(params) {
+                var value = e.value;
+                console.log(value);
+                updateGroup(e,e.getAttribute("fillUrl"),{
+                    parameters: params,
+                    onSuccess: function() {
+                        if (value=="") {
+                        // reflect the initial value. if the control depends on several other group multi select
+                        // it may take several updates before we get the right items, which is why all these precautions.
+                            var v = e.getAttribute("value");
+                            if (v) {
+                                e.value = v;
+                                if (e.value==v) e.removeAttribute("value"); 
+                                // we were able to apply our initial value
+                            }
+                        }
+                            var d = e.parentElement.nextElementSibling;
+                        fireEvent(e,"filled");
+                        fireEvent(d,"filled");
+                        // let other interested parties know that the items have changed
+
+                        // if the update changed the current selection, others listening to this control needs to be notified.
+                        if (e.value!=value) {
+                            fireEvent(e,"change");
+                            fireEvent(d,"change");
+                        }
+                    }
+                });
+            });            
+        });
+    </script>
+    <j:if test="${not empty field}"> 
+        ${descriptor.calcFillSettings(field,attrs)} 
+    </j:if>
+
+    <!--this figures out the 'fillUrl' and 'fillDependsOn' attribute--> 
+    <fieldset style="margin: 0px 0px 0px 26px">
+        <legend>
+            <div style="font-weight: bold; margin-bottom: 0.2em; margin-top: 0.4em">${attrs.title}</div>
+        </legend>
+        <div name="${attrs.name?:'_.' + attrs.field}" class="groupmultiselectdiv" fillDependsOn="${attrs.fillDependsOn}"  fillUrl="${attrs.fillUrl}" >
+            <div class="grouppart">
+            </div>        
+            <div style="display: none;">
+                <j:forEach var="i" items="${attrs.items}">
+                    <p class="groupMultiSelectTemplate" group="${i.group}" value="${i.value}" />                
+                </j:forEach>
+            </div>
+        </div>
+    </fieldset>    
+     <input name="${attrs.name?:'_.' + attrs.field}" style="display: none" form="no-exist"/>
+</j:jelly>

@@ -1,0 +1,9 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"          
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <script src="${rootURL}/plugin/programmable-section/js/ace/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <!--multi-checkbox && dynamic hetero list-->    
+    <script src="${rootURL}/plugin/programmable-section/js/ui-control.js" type="text/javascript"/>
+    <st:adjunct includes="lib.form.dragdrop.dragdrop"/>
+    <st:adjunct includes="lib.form.hetero-list.hetero-list"/> 
+    <st:adjunct includes="lib.form.repeatable.repeatable" />
+</j:jelly>
